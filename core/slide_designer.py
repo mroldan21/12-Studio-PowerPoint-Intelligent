@@ -1,6 +1,6 @@
 """
 core/slide_designer.py — Diseñador Visual de Diapositivas
-Ahora delega en el sistema de temas.
+Delega en el sistema de temas. Compatible con versiones anteriores.
 """
 
 import json
@@ -17,7 +17,6 @@ from .themes import ThemeRegistry
 class SlideDesigner:
     """
     Diseñador que aplica temas visuales a diapositivas.
-    Mantiene compatibilidad con el sistema anterior.
     """
 
     def __init__(self, theme_name: str = "pitchsync_dark"):
@@ -36,7 +35,6 @@ class SlideDesigner:
         if self.theme:
             return self.theme.apply(engine, structure)
         else:
-            # Fallback básico
             return self._build_basic(engine, structure)
 
     def _build_basic(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
@@ -66,7 +64,7 @@ class SlideDesigner:
 
         return {"slides_created": len(slides_data), "title": structure.get("title", "Untitled")}
 
-    # ── Métodos legacy para compatibilidad ─────────────────────────────────
+    # ── Métodos legacy para compatibilidad con temas JSON ─────────────────
 
     def _load_theme(self, theme_name: str) -> Dict[str, Any]:
         theme_path = Path(__file__).parent.parent / "config" / "themes" / f"{theme_name}.json"
@@ -97,7 +95,3 @@ class SlideDesigner:
             font_size=font_size, bold=True,
             color=self._hex_to_rgb("#FFFFFF")
         )
-
-    def build_presentation(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
-        """Alias para compatibilidad."""
-        return self.build_presentation(engine, structure)
