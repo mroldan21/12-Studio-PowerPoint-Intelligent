@@ -1,11 +1,10 @@
 """
 core/ai_client.py — Cliente unificado multi-proveedor
-Soporta: OpenRouter, Groq, Claude (Anthropic), Moonshot
+Soporta: OpenRouter, Groq, Claude (Anthropic), Moonshot, Gemini (Google)
 """
 
 import os
 import json
-import re
 import aiohttp
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
@@ -18,6 +17,7 @@ class AIResponse:
     tokens_used: int
     finish_reason: str
     raw_response: Dict[str, Any]
+
 
 class BaseAIClient(ABC):
     """Interfaz base para todos los clientes de IA."""
@@ -42,6 +42,17 @@ class BaseAIClient(ABC):
         json_schema: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         pass
+
+    @staticmethod
+    def _parse_json_response(content: str) -> Dict[str, Any]:
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            start = content.find("{")
+            end = content.rfind("}") + 1
+            if start >= 0 and end > start:
+                return json.loads(content[start:end])
+            raise
 
 
 class OpenRouterClient(BaseAIClient):
@@ -121,18 +132,6 @@ class OpenRouterClient(BaseAIClient):
 
         return self._parse_json_response(response.content)
 
-    @staticmethod
-    def _parse_json_response(content: str) -> Dict[str, Any]:
-        """Extrae JSON de la respuesta, con fallback."""
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            start = content.find("{")
-            end = content.rfind("}") + 1
-            if start >= 0 and end > start:
-                return json.loads(content[start:end])
-            raise
-
 
 class GroqClient(BaseAIClient):
     """Cliente directo para la API de Groq."""
@@ -209,17 +208,6 @@ class GroqClient(BaseAIClient):
 
         return self._parse_json_response(response.content)
 
-    @staticmethod
-    def _parse_json_response(content: str) -> Dict[str, Any]:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            start = content.find("{")
-            end = content.rfind("}") + 1
-            if start >= 0 and end > start:
-                return json.loads(content[start:end])
-            raise
-
 
 class ClaudeClient(BaseAIClient):
     """Cliente directo para la API de Anthropic (Claude)."""
@@ -246,7 +234,6 @@ class ClaudeClient(BaseAIClient):
         max_tokens: Optional[int] = None,
         response_format: Optional[Dict] = None
     ) -> AIResponse:
-        # Claude usa formato diferente: system va como parámetro separado
         system_msg = None
         claude_messages = []
         for msg in messages:
@@ -308,17 +295,6 @@ class ClaudeClient(BaseAIClient):
         )
 
         return self._parse_json_response(response.content)
-
-    @staticmethod
-    def _parse_json_response(content: str) -> Dict[str, Any]:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            start = content.find("{")
-            end = content.rfind("}") + 1
-            if start >= 0 and end > start:
-                return json.loads(content[start:end])
-            raise
 
 
 class MoonshotClient(BaseAIClient):
@@ -396,16 +372,90 @@ class MoonshotClient(BaseAIClient):
 
         return self._parse_json_response(response.content)
 
-    @staticmethod
-    def _parse_json_response(content: str) -> Dict[str, Any]:
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            start = content.find("{")
-            end = content.rfind("}") + 1
-            if start >= 0 and end > start:
-                return json.loads(content[start:end])
-            raise
+
+class GeminiClient(BaseAIClient):
+    """Cliente directo para la API de Google Gemini."""
+
+    BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
+
+    def __init__(self, api_key: Optional[str] = None):
+        self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
+        if not self.api_key:
+            raise ValueError("GOOGLE_API_KEY no configurada")
+
+    async def chat_completion(
+        self,
+        model: str,
+        messages: List[Dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        response_format: Optional[Dict] = None
+    ) -> AIResponse:
+        # Gemini usa formato diferente: contents en lugar de messages
+        contents = []
+        system_instruction = None
+
+        for msg in messages:
+            if msg["role"] == "system":
+                system_instruction = {"parts": [{"text": msg["content"]}]}
+            else:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append({
+                    "role": role,
+                    "parts": [{"text": msg["content"]}]
+                })
+
+        payload = {
+            "contents": contents,
+            "generationConfig": {
+                "temperature": temperature,
+            }
+        }
+        if max_tokens:
+            payload["generationConfig"]["maxOutputTokens"] = max_tokens
+
+        url = f"{self.BASE_URL}/models/{model}:generateContent?key={self.api_key}"
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"Gemini error {response.status}: {error_text}")
+
+                data = await response.json()
+                candidate = data["candidates"][0]
+                content = candidate["content"]["parts"][0]["text"]
+
+                # Estimar tokens (Gemini no siempre devuelve usage)
+                tokens_used = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+
+                return AIResponse(
+                    content=content,
+                    model_used=model,
+                    tokens_used=tokens_used,
+                    finish_reason=candidate.get("finishReason", "unknown"),
+                    raw_response=data
+                )
+
+    async def generate_structured(
+        self,
+        model: str,
+        system_prompt: str,
+        user_prompt: str,
+        json_schema: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        response = await self.chat_completion(
+            model=model,
+            messages=messages,
+            temperature=0.5
+        )
+
+        return self._parse_json_response(response.content)
 
 
 # ── FÁBRICA DE CLIENTES ───────────────────────────────────────────────────
@@ -421,6 +471,8 @@ class AIClientFactory:
         "claude": ClaudeClient,
         "anthropic": ClaudeClient,
         "moonshot": MoonshotClient,
+        "gemini": GeminiClient,
+        "google": GeminiClient,
     }
 
     @classmethod
@@ -441,5 +493,4 @@ class AIClientFactory:
             if model["id"] == model_id:
                 provider = model.get("provider", "openrouter")
                 return cls.create(provider)
-        # Fallback: OpenRouter para modelos antiguos sin provider
         return cls.create("openrouter")

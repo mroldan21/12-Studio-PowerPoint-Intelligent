@@ -11,7 +11,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_SHAPE
 from .pptx_engine import PPTXEngine
-from .themes import ThemeRegistry
+from .themes import ThemeRegistry, JSONTheme
 
 
 class SlideDesigner:
@@ -25,7 +25,6 @@ class SlideDesigner:
 
         # Fallback a tema JSON si no está registrado
         if not self.theme:
-            from .themes import JSONTheme
             self.theme = JSONTheme(theme_name)
 
     def build_presentation(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
@@ -64,7 +63,7 @@ class SlideDesigner:
 
         return {"slides_created": len(slides_data), "title": structure.get("title", "Untitled")}
 
-    # ── Métodos legacy para compatibilidad con temas JSON ─────────────────
+    # ── Métodos legacy para compatibilidad con temas JSON directos ─────────
 
     def _load_theme(self, theme_name: str) -> Dict[str, Any]:
         theme_path = Path(__file__).parent.parent / "config" / "themes" / f"{theme_name}.json"

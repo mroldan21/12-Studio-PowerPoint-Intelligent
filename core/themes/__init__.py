@@ -4,27 +4,24 @@ core/themes/__init__.py — Sistema de Temas Flexible
 
 import json
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Tuple   # ← AÑADIDO Tuple
+from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
 from pptx.enum.shapes import MSO_SHAPE
 
-from core.pptx_engine import PPTXEngine
-
 
 class BaseTheme(ABC):
     """
     Clase base para todos los temas.
-    Un tema sabe cómo renderizar una estructura JSON en diapositivas.
     """
 
     name: str = "base"
     display_name: str = "Base Theme"
 
     @abstractmethod
-    def apply(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
+    def apply(self, engine, structure: Dict[str, Any]) -> Dict[str, Any]:
         """
         Aplica el tema a una presentación completa.
         Recibe el engine (con o sin plantilla cargada) y la estructura JSON.
@@ -57,7 +54,8 @@ class JSONTheme(BaseTheme):
         with open(theme_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    def apply(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
+    def apply(self, engine, structure: Dict[str, Any]) -> Dict[str, Any]:
+        # Importación diferida para evitar circularidad
         from core.slide_designer import SlideDesigner
         designer = SlideDesigner(self.theme_name)
         return designer.build_presentation(engine, structure)
@@ -70,29 +68,31 @@ class ProgrammaticTheme(BaseTheme):
     """
 
     def __init__(self):
+        super().__init__()
+        self.W = 13.333
+        self.H = 7.5
+
+    @abstractmethod
+    def render_title_slide(self, engine, slide_index: int, data: Dict[str, Any]):
         pass
 
     @abstractmethod
-    def render_title_slide(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
+    def render_content_slide(self, engine, slide_index: int, data: Dict[str, Any]):
         pass
 
     @abstractmethod
-    def render_content_slide(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
+    def render_section_divider(self, engine, slide_index: int, data: Dict[str, Any]):
         pass
 
     @abstractmethod
-    def render_section_divider(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
+    def render_image_slide(self, engine, slide_index: int, data: Dict[str, Any]):
         pass
 
     @abstractmethod
-    def render_image_slide(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
+    def render_split_slide(self, engine, slide_index: int, data: Dict[str, Any]):
         pass
 
-    @abstractmethod
-    def render_split_slide(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
-        pass
-
-    def apply(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
+    def apply(self, engine, structure: Dict[str, Any]) -> Dict[str, Any]:
         slides_data = structure.get("slides", [])
         current_count = engine.slide_count
         needed = len(slides_data)
@@ -115,7 +115,6 @@ class ProgrammaticTheme(BaseTheme):
             else:
                 self.render_content_slide(engine, i, slide_data)
 
-            # Añadir notas
             notes = slide_data.get("notes", "")
             if notes:
                 engine.set_notes(i, notes)
@@ -129,7 +128,6 @@ class ProgrammaticTheme(BaseTheme):
 class TemplateTheme(BaseTheme):
     """
     Tema basado en plantilla PPTX importada.
-    Usa la plantilla como base y reemplaza contenido en placeholders.
     """
 
     def __init__(self, template_path: str):
@@ -137,18 +135,14 @@ class TemplateTheme(BaseTheme):
         if not self.template_path.exists():
             raise FileNotFoundError(f"Plantilla no encontrada: {template_path}")
 
-    def apply(self, engine: PPTXEngine, structure: Dict[str, Any]) -> Dict[str, Any]:
-        # Cargar plantilla
+    def apply(self, engine, structure: Dict[str, Any]) -> Dict[str, Any]:
         engine.load_from_path(str(self.template_path))
 
         slides_data = structure.get("slides", [])
-        # Si la plantilla tiene menos slides que necesitamos, añadir en blanco
         current = engine.slide_count
         for _ in range(max(0, len(slides_data) - current)):
             engine.add_blank_slide()
 
-        # Por ahora: aplicar diseño básico sobre la plantilla
-        # En versión futura: mapear placeholders de la plantilla
         for i, slide_data in enumerate(slides_data):
             if i < engine.slide_count:
                 self._fill_slide(engine, i, slide_data)
@@ -159,10 +153,8 @@ class TemplateTheme(BaseTheme):
             "template_used": str(self.template_path)
         }
 
-    def _fill_slide(self, engine: PPTXEngine, slide_index: int, data: Dict[str, Any]):
-        """Rellena una slide de plantilla con contenido."""
+    def _fill_slide(self, engine, slide_index: int, data: Dict[str, Any]):
         slide_type = data.get("type", "content_slide")
-        # Placeholder básico: añadir título y bullets encima
         title = data.get("title", "")
         bullets = data.get("bullets", [])
 
@@ -218,6 +210,9 @@ class ThemeRegistry:
             return
         for theme_file in themes_dir.glob("*.json"):
             name = theme_file.stem
+            # Ignorar archivos de metadata (como pitchsync_cyber.json)
+            if name.endswith("_meta"):
+                continue
             try:
                 theme = JSONTheme(name)
                 cls.register(name, theme)
@@ -225,9 +220,5 @@ class ThemeRegistry:
                 print(f"⚠️ Error cargando tema {name}: {e}")
 
 
-# Importar temas programáticos para registro automático
-from .pitchsync_theme import PitchSyncTheme
-
-# Registro automático
+# Registro de temas built-in
 ThemeRegistry.register("pitchsync_dark", JSONTheme("pitchsync_dark"))
-ThemeRegistry.register("pitchsync_cyber", PitchSyncTheme())
