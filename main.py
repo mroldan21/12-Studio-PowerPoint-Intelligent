@@ -182,7 +182,8 @@ async def generate_presentation(
 async def generate_presentation_json(
     prompt: str = Form(...),
     input_type: str = Form("summary"),
-    model_id: Optional[str] = Form(None)
+    model_id: Optional[str] = Form(None),
+    theme: str = Form("pitchsync_dark")
 ):
     try:
         orchestrator = ContentOrchestrator(

@@ -55,10 +55,40 @@ class JSONTheme(BaseTheme):
             return json.load(f)
 
     def apply(self, engine, structure: Dict[str, Any]) -> Dict[str, Any]:
-        # Importación diferida para evitar circularidad
-        from core.slide_designer import SlideDesigner
-        designer = SlideDesigner(self.theme_name)
-        return designer.build_presentation(engine, structure)
+        slides_data = structure.get("slides", [])
+        current_count = engine.slide_count
+        needed = len(slides_data)
+
+        for _ in range(max(0, needed - current_count)):
+            engine.add_blank_slide()
+
+        colors = self.config.get("colors", {})
+        bg = colors.get("background", "#080814")
+        text = colors.get("text_primary", "#FFFFFF")
+        text_rgb = self._hex_to_rgb(text)
+        bg_rgb = self._hex_to_rgb(bg)
+
+        for i, slide_data in enumerate(slides_data):
+            slide_type = slide_data.get("type", "content_slide")
+            title = slide_data.get("title", "")
+            bullets = slide_data.get("bullets", [])
+            notes = slide_data.get("notes", "")
+
+            engine.set_slide_background_color(i, bg_rgb[0], bg_rgb[1], bg_rgb[2])
+
+            if title:
+                engine.add_text_box(i, title, 0.8, 0.5, 11.7, 1.0,
+                                    font_size=36, bold=True, color=text_rgb)
+
+            if bullets:
+                bullet_text = "\n".join([f"• {b}" for b in bullets])
+                engine.add_text_box(i, bullet_text, 0.8, 1.8, 11.7, 5.0,
+                                    font_size=16, color=text_rgb)
+
+            if notes:
+                engine.set_notes(i, notes)
+
+        return {"slides_created": len(slides_data), "title": structure.get("title", "Untitled")}
 
 
 class ProgrammaticTheme(BaseTheme):

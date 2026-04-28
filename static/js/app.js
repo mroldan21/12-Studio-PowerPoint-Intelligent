@@ -149,7 +149,8 @@ async function generatePresentation() {
         formData.append('model_id', modelId);
         formData.append('include_images', includeImages);
         formData.append('filename', filename);
-        formData.append('theme', 'pitchsync_dark');
+        const theme = document.getElementById('themeSelector')?.value || 'pitchsync_dark';
+        formData.append('theme', theme);
         
         if (file) {
             formData.append('file', file);
@@ -158,6 +159,7 @@ async function generatePresentation() {
         
         // Primero: obtener preview JSON
         log('🤖 Consultando IA para estructura...', 'info');
+        const theme = document.getElementById('themeSelector')?.value || 'pitchsync_dark';
         
         const jsonResponse = await fetch(`${API_BASE}/generate/json`, {
             method: 'POST',
@@ -167,7 +169,8 @@ async function generatePresentation() {
             body: new URLSearchParams({
                 prompt: prompt,
                 input_type: inputType,
-                model_id: modelId
+                model_id: modelId,
+                theme: theme
             })
         });
         
