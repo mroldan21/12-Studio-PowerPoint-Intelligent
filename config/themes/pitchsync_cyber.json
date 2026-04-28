@@ -1,0 +1,26 @@
+{
+  "name": "PitchSync Cyberpunk",
+  "description": "Estética cyberpunk con bordes neón, tarjetas y grids. Basado en el diseño PitchSync original.",
+  "type": "programmatic",
+  "python_class": "core.themes.pitchsync_theme.PitchSyncTheme",
+  "colors": {
+    "primary": "#00E5CC",
+    "secondary": "#EE00BB",
+    "accent": "#FF8000",
+    "background": "#080814",
+    "surface": "#0F0F1A",
+    "surface_light": "#1A1A30",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#8899AA",
+    "success": "#00FF88",
+    "warning": "#FFDD00",
+    "error": "#FF4757"
+  },
+  "features": [
+    "bordes_neon",
+    "tarjetas_con_borde",
+    "headers_con_acento",
+    "tags_redondeados",
+    "barras_decorativas"
+  ]
+}
