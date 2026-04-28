@@ -1,0 +1,12 @@
+<!-- PitchSync Master Template placeholder -->
+<!-- This would be a real .pptx file in production -->
+<presentation>
+  <title>PitchSync Master Template</title>
+  <theme>pitchsync_dark</theme>
+  <slides>
+    <slide type="title" layout="title"/>
+    <slide type="content" layout="content"/>
+    <slide type="two_column" layout="two_column"/>
+    <slide type="closing" layout="closing"/>
+  </slides>
+</presentation>

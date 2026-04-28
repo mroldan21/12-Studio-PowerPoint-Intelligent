@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPTX Studio — Intelligent Edition</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">◈</span>
+                <span class="logo-text">PPTX<span class="logo-accent">Studio</span></span>
+            </div>
+            <div class="header-controls">
+                <select id="modelSelector" class="model-selector">
+                    <option value="">Cargando modelos...</option>
+                </select>
+                <div class="model-info" id="modelInfo"></div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Panel -->
+            <section class="input-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="summary">Resumen</button>
+                    <button class="tab-btn" data-tab="extensive">Apunte</button>
+                    <button class="tab-btn" data-tab="research">Investigación</button>
+                    <button class="tab-btn" data-tab="import">Editar PPTX</button>
+                </div>
+
+                <div class="tab-content active" id="tab-summary">
+                    <textarea id="promptInput" placeholder="Describe el tema de tu presentación... Ej: 'Una presentación sobre inteligencia artificial en medicina, 8 diapositivas, tono profesional'"></textarea>
+                </div>
+
+                <div class="tab-content" id="tab-extensive">
+                    <textarea id="extensiveInput" placeholder="Pega aquí tus apuntes extensos..."></textarea>
+                </div>
+
+                <div class="tab-content" id="tab-research">
+                    <textarea id="researchInput" placeholder="Tema de investigación..."></textarea>
+                </div>
+
+                <div class="tab-content" id="tab-import">
+                    <div class="file-upload">
+                        <input type="file" id="pptxFile" accept=".pptx">
+                        <label for="pptxFile">📁 Arrastra o selecciona un PPTX</label>
+                    </div>
+                    <textarea id="importPrompt" placeholder="Instrucciones para mejorar el PPTX..."></textarea>
+                </div>
+
+                <div class="options">
+                    <label class="checkbox">
+                        <input type="checkbox" id="includeImages" checked>
+                        <span>Incluir imágenes IA</span>
+                    </label>
+                    <input type="text" id="filename" placeholder="nombre_archivo.pptx" value="presentacion.pptx">
+                </div>
+
+                <button id="generateBtn" class="generate-btn">
+                    <span class="btn-icon">⚡</span>
+                    <span class="btn-text">GENERAR PRESENTACIÓN</span>
+                </button>
+            </section>
+
+            <!-- Preview Panel -->
+            <section class="preview-panel">
+                <div class="preview-header">
+                    <h3>Vista Previa</h3>
+                    <button id="previewJsonBtn" class="secondary-btn">Ver JSON</button>
+                </div>
+                <div class="preview-content" id="previewContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">📊</div>
+                        <p>La estructura generada aparecerá aquí</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Terminal -->
+        <section class="terminal" id="terminal">
+            <div class="terminal-header">
+                <span class="terminal-title">◈ TERMINAL</span>
+                <span class="terminal-status" id="terminalStatus">● Listo</span>
+            </div>
+            <div class="terminal-body" id="terminalBody">
+                <div class="terminal-line system">PPTX Studio Intelligent Edition v2.0.0</div>
+                <div class="terminal-line system">Sistema inicializado. Selecciona un modelo y genera tu presentación.</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal JSON -->
+    <div class="modal" id="jsonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Estructura JSON</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <pre id="jsonContent"></pre>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "PitchSync Dark",
+  "colors": {
+    "primary": "#00E5CC",
+    "secondary": "#EE00BB",
+    "accent": "#7B61FF",
+    "background": "#080814",
+    "surface": "#0F0F1A",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#A0A0B0",
+    "success": "#00E5CC",
+    "warning": "#FFB800",
+    "error": "#FF4757"
+  },
+  "typography": {
+    "title_font": "Montserrat",
+    "body_font": "Inter",
+    "title_sizes": {
+      "slide_title": 44,
+      "section_title": 36,
+      "subtitle": 28
+    },
+    "body_size": 18,
+    "bullet_size": 16
+  },
+  "slide_layouts": {
+    "title_slide": {
+      "background": "#080814",
+      "title_position": {"left": 1.0, "top": 2.5, "width": 11.3, "height": 2.0},
+      "subtitle_position": {"left": 1.0, "top": 4.8, "width": 11.3, "height": 1.0}
+    },
+    "content_slide": {
+      "background": "#0F0F1A",
+      "title_position": {"left": 0.8, "top": 0.5, "width": 11.7, "height": 1.0},
+      "content_position": {"left": 0.8, "top": 1.8, "width": 11.7, "height": 5.0}
+    },
+    "split_slide": {
+      "background": "#080814",
+      "title_position": {"left": 0.8, "top": 0.5, "width": 11.7, "height": 1.0},
+      "left_content": {"left": 0.8, "top": 1.8, "width": 5.5, "height": 5.0},
+      "right_content": {"left": 6.8, "top": 1.8, "width": 5.5, "height": 5.0}
+    },
+    "image_slide": {
+      "background": "#080814",
+      "title_position": {"left": 0.8, "top": 0.5, "width": 11.7, "height": 1.0},
+      "image_position": {"left": 1.0, "top": 1.8, "width": 10.0, "height": 5.2}
+    }
+  },
+  "spacing": {
+    "slide_width_inches": 13.333,
+    "slide_height_inches": 7.5,
+    "margin_inches": 0.8
+  }
+}

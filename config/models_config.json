@@ -1,0 +1,50 @@
+{
+  "models": [
+    {
+      "id": "google/gemma-3-27b-it:free",
+      "name": "Gemma 3 27B",
+      "description": "Ideal para resúmenes y apuntes de gran escala (131K context)",
+      "capabilities": ["text-only"],
+      "recommended_for": ["summary", "extensive_notes"],
+      "context_length": 131072,
+      "free": true
+    },
+    {
+      "id": "nousresearch/hermes-3-llama-3.1-405b:free",
+      "name": "Hermes 3 405B",
+      "description": "Recomendado para investigación profunda y lógica académica",
+      "capabilities": ["text-only", "reasoning"],
+      "recommended_for": ["research"],
+      "context_length": 128000,
+      "free": true
+    },
+    {
+      "id": "meta-llama/llama-3.3-70b-instruct:free",
+      "name": "Llama 3.3 70B",
+      "description": "Recomendado para redacción rápida de notas y bullet points",
+      "capabilities": ["text-only"],
+      "recommended_for": ["summary", "quick_notes"],
+      "context_length": 128000,
+      "free": true
+    },
+    {
+      "id": "google/gemma-3-12b-it:free",
+      "name": "Gemma 3 12B",
+      "description": "Recomendado para tareas multimodales y rápidas",
+      "capabilities": ["multimodal"],
+      "recommended_for": ["multimodal", "fast_tasks"],
+      "context_length": 128000,
+      "free": true
+    },
+    {
+      "id": "meta-llama/llama-3.2-3b-instruct:free",
+      "name": "Llama 3.2 3B",
+      "description": "Recomendado para procesamiento ligero",
+      "capabilities": ["text-only"],
+      "recommended_for": ["lightweight"],
+      "context_length": 128000,
+      "free": true
+    }
+  ],
+  "default_model": "google/gemma-3-27b-it:free"
+}
